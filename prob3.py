@@ -1,26 +1,71 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.io import wavfile
-
-# 1. Charger le fichier .wav
-samplerate, data = wavfile.read('/home/olivier/Downloads/note_guitare_lad.wav')
-
-# Si le fichier audio est stéréo, prendre une seule des deux pistes
-if len(data.shape) > 1:
-    data = data[:, 0]  # Prendre uniquement la première piste (mono)
-
-# 2. Appliquer la fenêtre de Hanning
-N = len(data)  # Nombre d'échantillons
-window = np.hanning(N)  # Créer la fenêtre de Hanning
-data_windowed = data * window  # Appliquer la fenêtre sur le signal
-
-# 3. Appliquer la FFT avec NumPy
-T = 1.0 / samplerate  # Intervalle de temps entre les échantillons
-frequencies = np.fft.fftfreq(N, T)  # Fréquences correspondant à la FFT
-fft_values = np.fft.fft(data_windowed)  # Calcul de la FFT après application de la fenêtre
+import math
 
 
 
+import matplotlib.pyplot as plt
+import numpy as np
+import soundfile as sf
+
+data, fe = sf.read('./note_guitare_LAd.wav')
+N = len(data)
+window = np.hanning(N)
+data_windowed = window * data
+Nb_sinusoids = 32
+
+X = np.fft.fft(data_windowed)
+freqs = np.fft.fftfreq(N) * fe  #
+
+index_lad = np.argmax(abs(X))
+fundamental = freqs[index_lad]
+
+# Get amplitudes at harmonics
+index_harms = [index_lad * i for i in range(0, Nb_sinusoids + 1)]
+harm_freqs = [freqs[i] for i in index_harms]
+harmonics = [np.abs(X[i]) for i in index_harms]
+phases = [np.angle(X[i]) for i in index_harms]
+
+fig, (harm, phas) = plt.subplots(2)
+
+
+harm.stem(harm_freqs, harmonics)
+harm.set_yscale("log")
+harm.set_title("Amplitude des harmoniques")
+harm.set_xlabel("Fréquence (Hz)")
+harm.set_ylabel("Amplitude")
+phas.stem(harm_freqs, phases)
+phas.set_title("Phase des harmoniques")
+phas.set_xlabel("Fréquence (Hz)")
+phas.set_ylabel("Amplitude")
+
+plt.show()
+
+
+amplitude= np.sum(harmonics)
+phase = np.sum(phases)
+
+signal = np.sin(2*np.pi*amplitude+phase)
+
+
+w = np.pi/1000
+for n in range (0,2000): 
+    sum = np.sum(np.exp(-1j*w*np.arange(n)))
+    gain = np.abs(sum) * 1/n 
+    if gain <= 10 ** (-3 / 20):  
+        N=n 
+        break 
+
+coeff= np.ones(N)/N
+enveloppe=np.convolve(coeff,np.abs(data))
+plt.plot(enveloppe)
+plt.show()
+
+synth = enveloppe * signal
+
+plt.plot(synth)
+plt.show()
 
 
 # # 4. Calculer l'amplitude en dB
