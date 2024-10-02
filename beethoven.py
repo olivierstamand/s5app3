@@ -32,6 +32,10 @@ N_passe_bas = trouver_ordre_filtre_passe_bas(w=w)
 # Enveloppe du signal initial
 coeff = np.ones(N_passe_bas) / N_passe_bas
 
+response = np.fft.fft(coeff)
+frequences = np.fft.fftfreq(len(coeff),d=1/fe)
+tracer_forme_onde(x=frequences, y=np.abs((response)), titre="Réponse en fréquence du filtre passe-bas",db=True,limit=100)
+
 enveloppe = np.convolve(coeff, np.abs(data), mode="same")
 enveloppe = np.divide(enveloppe, np.max(enveloppe))
 tracer_forme_onde(y=enveloppe, titre="Enveloppe du signal initial")

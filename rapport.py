@@ -9,7 +9,7 @@ from basson_accessory import *
 
 
 data, fe = sf.read("note_basson_plus_sinus_1000_hz.wav")
-plot_waveform(y=data, title="Forme du fichier audio original")
+tracer_forme_onde(y=data, titre="Forme du fichier audio original")
 
 
 f_0 = 1000

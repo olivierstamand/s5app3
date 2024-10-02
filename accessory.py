@@ -19,7 +19,7 @@ def tracer_forme_onde(y, titre, x=None,limit=160000,db=False):
     else:
         plt.ylabel("Amplitude normalisé")
         plt.xlabel("Echantillons/rad")
-    #plt.xlim(0, limit)
+    plt.xlim(0, limit)
     plt.title(titre)
     plt.grid()
     plt.show()
