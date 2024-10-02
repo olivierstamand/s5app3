@@ -23,6 +23,7 @@ K = 2 * m + 1
 
 index = np.linspace(-(N / 2) + 1, (N / 2), N)
 filtre_coupe_bande = [coupe_bande(n, N, K, w_0) for n in index]
+
 plt.figure(figsize=(10, 6))
 plt.plot(index, filtre_coupe_bande)
 plt.title("Filtre Coupe-Bande", fontsize=14)
@@ -31,65 +32,50 @@ plt.ylabel("Amplitude", fontsize=12)
 plt.grid(True)
 plt.show()
 
-coupe_bande_temporel = np.fft.ifft(filtre_coupe_bande)
-# (iii) Réponse à une sinusoïde de 1000 Hz
-t = np.arange(0, 1, 1 / fe)  # durée de 1 seconde
-sinusoide_1000Hz = np.sin(2 * np.pi * 1000 * t)
-reponse_sinus_1000Hz = np.convolve(sinusoide_1000Hz, coupe_bande_temporel, mode="same")
 
+window_filtre_coupe_bande = np.hamming(N) * filtre_coupe_bande
 plt.figure(figsize=(10, 6))
-plt.plot(t, reponse_sinus_1000Hz)
-plt.title("Réponse du filtre à une sinusoïde de 1000 Hz", fontsize=14)
-plt.xlabel("Temps (s)", fontsize=12)
+plt.plot(index, filtre_coupe_bande)
+plt.title("Filtre Coupe-Bande adouci", fontsize=14)
+plt.xlabel("Indice", fontsize=12)
 plt.ylabel("Amplitude", fontsize=12)
 plt.grid(True)
 plt.show()
 
-# (iv) Réponse en fréquence : amplitude et phase
-freqs = np.fft.fftfreq(N, d=1 / fe)
-reponse_freq = np.fft.fft(filtre_coupe_bande)
 
-# Amplitude
-# plt.figure(figsize=(10, 6))
-# plt.plot(freqs[: N // 2], np.abs(reponse_freq[: N // 2]))
-# plt.title("Amplitude de la réponse en fréquence", fontsize=14)
-# plt.xlabel("Fréquence (Hz)", fontsize=12)
-# plt.ylabel("Amplitude", fontsize=12)
-# plt.grid(True)
-# plt.show()
-
-# # Phase
-# plt.figure(figsize=(10, 6))
-# plt.stem(freqs[: N // 2], np.angle(reponse_freq[: N // 2]))
-# plt.title("Phase de la réponse en fréquence", fontsize=14)
-# plt.xlabel("Fréquence (Hz)", fontsize=12)
-# plt.ylabel("Phase (radians)", fontsize=12)
-# plt.grid(True)
-# plt.show()
-
-import numpy as np
-import matplotlib.pyplot as plt
-
-# (iv) Réponse en fréquence : amplitude (en dB) et phase
-freqs = np.fft.fftfreq(N, d=1 / fe)
-reponse_freq = np.fft.fft(filtre_coupe_bande)
-
-# Amplitude en dB
-amplitude_db = 20 * np.log10(np.abs(reponse_freq[: N // 2]))
-
-plt.figure(figsize=(10, 6))
-plt.plot(freqs[: N // 2], amplitude_db)
-plt.title("Amplitude de la réponse en fréquence (en dB)", fontsize=14)
-plt.xlabel("Fréquence (Hz)", fontsize=12)
-plt.ylabel("Amplitude (dB)", fontsize=12)
-plt.grid(True)
+# Générer une sinusoïde de 1000 Hz
+t = np.arange(0, N) / fe
+sinus_1000_hz = np.sin(2 * np.pi * f_0 * t)
+filtered_signal = np.convolve(sinus_1000_hz, window_filtre_coupe_bande, mode="same")
+plt.figure()
+plt.plot(t, filtered_signal)
+plt.title("Réponse à une sinusoïde de 1000 Hz après filtrage")
+plt.xlabel("Temps (s)")
+plt.ylabel("Amplitude")
+plt.grid()
 plt.show()
 
-# Phase
-plt.figure(figsize=(10, 6))
-plt.stem(freqs[: N // 2], np.angle(reponse_freq[: N // 2]))
-plt.title("Phase de la réponse en fréquence", fontsize=14)
-plt.xlabel("Fréquence (Hz)", fontsize=12)
-plt.ylabel("Phase (radians)", fontsize=12)
-plt.grid(True)
+
+# Calcul de la réponse en fréquence
+H_f = np.fft.fft(filtre_coupe_bande, N)
+H_f_shifted = np.fft.fftshift(H_f)
+frequencies = np.fft.fftfreq(N, 1 / fe)
+frequencies_shifted = np.fft.fftshift(frequencies)
+
+# Tracer la magnitude
+plt.figure()
+plt.plot(frequencies_shifted, 20 * np.log10(np.abs(H_f_shifted)))
+plt.title("Réponse en amplitude du filtre")
+plt.xlabel("Fréquence (Hz)")
+plt.ylabel("Amplitude (dB)")
+plt.grid()
+plt.show()
+
+# Tracer la phase
+plt.figure()
+plt.plot(frequencies_shifted, np.angle(H_f_shifted))
+plt.title("Réponse en phase du filtre")
+plt.xlabel("Fréquence (Hz)")
+plt.ylabel("Phase (rad)")
+plt.grid()
 plt.show()

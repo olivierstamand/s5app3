@@ -3,6 +3,8 @@ import matplotlib.pyplot as plt
 import soundfile as sf
 from accessory import *
 import pandas as pd
+from scipy.signal import freqz
+
 
 
 # Signal initial temporel
@@ -29,12 +31,20 @@ tracer_forme_onde(x=frequences, y=20 * np.log10(np.abs(X)), titre="Spectre de fr
 # Trouver l'ordre du filtre passe-bas
 N_passe_bas = trouver_ordre_filtre_passe_bas(w=w)
 
-# Enveloppe du signal initial
-coeff = np.ones(N_passe_bas) / N_passe_bas
 
-response = np.fft.fft(coeff)
-frequences = np.fft.fftfreq(len(coeff),d=1/fe)
-tracer_forme_onde(x=frequences, y=np.abs((response)), titre="Réponse en fréquence du filtre passe-bas",db=True,limit=100)
+
+coeff = np.ones(N_passe_bas) / N_passe_bas
+frequencies, response = freqz(coeff)
+
+plt.figure(figsize=(8, 6))
+
+plt.subplot(2, 1, 1)
+plt.plot(frequencies / np.pi, 20 * np.log10(np.abs(response)))
+plt.title('Frequency Response of Low-pass Filter')
+plt.ylabel('Magnitude (dB)')
+plt.grid()
+
+plt.show()
 
 enveloppe = np.convolve(coeff, np.abs(data), mode="same")
 enveloppe = np.divide(enveloppe, np.max(enveloppe))

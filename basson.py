@@ -30,9 +30,7 @@ m = math.ceil(f_1 * N / fe)
 K = 2 * m + 1
 
 index = np.linspace(-(N / 2) + 1, (N / 2), N)
-# filtre_coupe_bande = passebas_a_coupebande(
-#     h=passe_bas(n=index, N=N, K=K), n=index, omega_0=w_0
-# )
+
 filtre_coupe_bande = [coupe_bande(n, N, K, w_0) for n in index]
 tracer_forme_onde(y=filtre_coupe_bande, titre="Filtre coupe-bande)")
 bidon = np.fft.fft(filtre_coupe_bande)
@@ -112,3 +110,13 @@ table.set_fontsize(10)
 table.scale(1, 0.5)
 
 plt.show()
+
+# Pour le rapport:
+plot_spectrum(data, fe, title="Spectre d'amplitude - Basson avant filtrage")
+creer_wav_audio(audio, fe, "basson_filtre.wav")
+
+
+# Signal avant filtrage (basson original)
+
+# Signal après filtrage
+plot_spectrum(audio, fe, title="Spectre d'amplitude - Basson après filtrage")
