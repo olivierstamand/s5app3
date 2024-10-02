@@ -4,109 +4,95 @@ import wave
 import struct
 import numpy as np
 
-
-def read_wav_file():
+def lire_fichier_wav():
     data, fe = sf.read("./note_guitare_LAd.wav")
     return data, fe
 
-
-def plot_waveform(y, title, x=None):
+def tracer_forme_onde(y, titre, x=None,limit=160000,db=False):
     if x is None:
         plt.plot(y)
     else:
         plt.plot(x, y)
-    plt.title(title)
+    if db:
+        plt.ylabel("Amplitude (Db)")
+        plt.xlabel("Fréquence (Hz)")
+    else:
+        plt.ylabel("Amplitude normalisé")
+        plt.xlabel("Echantillons/rad")
+    #plt.xlim(0, limit)
+    plt.title(titre)
     plt.grid()
     plt.show()
 
 
-def create_wav_file(audio, sampleRate, filename):
-    audio = np.int16(audio / np.max(np.abs(audio)) * 32767)  # normalize to 16-bit PCM
-
-    with wave.open(filename, "w") as wav:
-        nchannels = 1
-        sampwidth = 2
-        nframes = len(audio)
-        wav.setparams(
-            (nchannels, sampwidth, sampleRate, nframes, "NONE", "not compressed")
-        )
-
-        for sample in audio:
-            wav.writeframes(struct.pack("h", sample))
-
-
-def plot_frequential_waveform(harm_freqs, harmonics, phases):
-
+def tracer_forme_onde_frequentielle(freq_harmoniques, harmoniques, phases):
     fig, (harm, phas) = plt.subplots(2)
-    harm.stem(harm_freqs, harmonics)
+    harm.stem(freq_harmoniques, harmoniques)
     harm.set_yscale("log")
     harm.set_title("Amplitude des harmoniques")
     harm.set_xlabel("Fréquence (Hz)")
     harm.set_ylabel("Amplitude")
-    phas.stem(harm_freqs, phases)
+    phas.stem(freq_harmoniques, phases)
     phas.set_title("Phase des harmoniques")
     phas.set_xlabel("Fréquence (Hz)")
     phas.set_ylabel("Amplitude")
     plt.show()
 
-
-def read_file(filename):
-    with wave.open(filename, "rb") as wav:
-        # Extract info from wave file
-        sample_rate = wav.getframerate()
+def lire_fichier(nom_fichier):
+    with wave.open(nom_fichier, "rb") as wav:
+        taux_echantillonnage = wav.getframerate()
         frames = wav.readframes(-1)
         frames = np.frombuffer(frames, dtype=np.int16)
 
-        # Normalize at 1
-        max_amp = np.amax(frames)
-        frames = np.divide(frames, max_amp)
+        # Normaliser à 1
+        amplitude_max = np.amax(frames)
+        frames = np.divide(frames, amplitude_max)
 
-        return sample_rate, frames
+        return taux_echantillonnage, frames
 
+def pad_thai(array, longueur):
+    return np.pad(array, (0, longueur - len(array)))
 
-def pad_thai(array, length):
-    return np.pad(array, (0, length - len(array)))
+def unpad_thai(array, longueur):
+    return array[0:longueur]
 
-
-def unpad_thai(array, length):
-    return array[0:length]
-
-
-def create_wav_from_audio(audio, sampleRate, filename):
-    with wave.open(filename, "w") as wav:
+def creer_wav_audio(audio, taux_echantillonnage, nom_fichier):
+    with wave.open(nom_fichier, "w") as wav:
         nchannels = 1
         sampwidth = 2
         nframes = len(audio)
         wav.setparams(
-            (nchannels, sampwidth, sampleRate, nframes, "NONE", "not compressed")
+            (nchannels, sampwidth, taux_echantillonnage, nframes, "NONE", "not compressed")
         )
 
         for sample in audio:
             wav.writeframes(struct.pack("h", int(sample)))
 
-
-def create_audio(harmonics, phases, fundamental, sampleRate, enveloppe, duration_s=2):
+def creer_audio(harmoniques, phases, fondamentale, taux_echantillonnage, enveloppe, duree_s=2):
     audio = []
-    ts = np.linspace(0, duration_s, int(sampleRate * duration_s))
+    ts = np.linspace(0, duree_s, int(taux_echantillonnage * duree_s))
 
     audio = []
     for t in ts:
         total = 0
-        for i in range(len(harmonics)):
-            total += harmonics[i] * np.sin(2 * np.pi * fundamental * i * t + phases[i])
+        for i in range(len(harmoniques)):
+            total += harmoniques[i] * np.sin(2 * np.pi * fondamentale * i * t + phases[i])
 
         audio.append(total)
-    new_env = unpad_thai(enveloppe, len(audio))
-    new_audio = pad_thai(audio, len(new_env))
-    audio = np.multiply(new_audio, new_env)
+    nouvelle_enveloppe = unpad_thai(enveloppe, len(audio))
+    nouvel_audio = pad_thai(audio, len(nouvelle_enveloppe))
+    audio = np.multiply(nouvel_audio, nouvelle_enveloppe)
     return audio.tolist()
-
 
 def trouver_ordre_filtre_passe_bas(w):
     for n in range(1, 2000):
-        sum = np.sum(np.exp(-1j * w * np.arange(n)))
-        gain = np.abs(sum) * 1 / n
+        
+        somme = np.sum(np.exp(-1j * w * np.arange(n)))
+        gain = np.abs(somme) * 1 / n
         if gain <= 10 ** (-3 / 20):
             N = n
             break
     return N
+
+def creer_silence(taux_echantillonnage, duree_s = 1):
+    return [0 for t in np.linspace(0, duree_s , int(taux_echantillonnage * duree_s))]

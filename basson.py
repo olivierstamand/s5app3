@@ -9,8 +9,16 @@ from basson_accessory import *
 
 
 data, fe = sf.read("note_basson_plus_sinus_1000_hz.wav")
-plot_waveform(y=data, title="Forme du fichier audio original")
+tracer_forme_onde(y=data, titre="Forme du fichier audio original")
+X = np.fft.fft(data)
+frequences = np.fft.fftfreq(len(data),d=1/fe)
 
+plt.plot(frequences, 20 * np.log10(np.abs(X)))
+plt.xlim(0,1500)
+plt.title("Spectres de fourier avant filtrage")
+plt.xlabel("fréquence (Hz)")
+plt.ylabel("Amplitude (dB)")
+plt.show()
 
 f_0 = 1000
 f_1 = 40
@@ -26,14 +34,27 @@ index = np.linspace(-(N / 2) + 1, (N / 2), N)
 #     h=passe_bas(n=index, N=N, K=K), n=index, omega_0=w_0
 # )
 filtre_coupe_bande = [coupe_bande(n, N, K, w_0) for n in index]
-plot_waveform(y=filtre_coupe_bande, title="Filtre coupe-bande)")
+tracer_forme_onde(y=filtre_coupe_bande, titre="Filtre coupe-bande)")
+bidon = np.fft.fft(filtre_coupe_bande)
+bidonfreq = np.fft.fftfreq(len(filtre_coupe_bande),d=1/fe) 
 
+plt.plot(bidonfreq, 20 * np.log10(np.abs(bidon))) 
+plt.show()
 
 window = np.hanning(N)
 filtre_coupe_bande_fenetre = filtre_coupe_bande * window
-plot_waveform(y=filtre_coupe_bande_fenetre, title="Filtre coupe-bande fenêtré")
+tracer_forme_onde(y=filtre_coupe_bande_fenetre, titre="Filtre coupe-bande fenêtré")
 
 audio = np.convolve(filtre_coupe_bande_fenetre, data)
-plot_waveform(y=audio, title="Forme du fichier audio filtré")
+tracer_forme_onde(y=audio, titre="Forme du fichier audio filtré")
+X = np.fft.fft(audio)
+frequences = np.fft.fftfreq(len(audio),d=1/fe)
 
-create_wav_file(audio, fe, "basson_filtre.wav")
+plt.plot(frequences, 20 * np.log10(np.abs(X)))
+plt.xlim(0,1500)
+plt.title("Spectres de fourier avant filtrage")
+plt.xlabel("fréquence (Hz)")
+plt.ylabel("Amplitude (dB)")
+plt.show()
+
+creer_wav_audio(audio, fe, "basson_filtre.wav")
