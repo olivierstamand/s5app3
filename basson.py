@@ -9,7 +9,8 @@ from basson_accessory import *
 
 
 data, fe = sf.read("note_basson_plus_sinus_1000_hz.wav")
-plot_waveform(y=data, title="Forme du fichier audio original")
+plot_waveform_avec_unites(data=data, fe=fe)
+# plot_waveform(y=data, title="Forme du fichier audio original")
 
 
 f_0 = 1000
@@ -36,4 +37,13 @@ plot_waveform(y=filtre_coupe_bande_fenetre, title="Filtre coupe-bande fenêtré"
 audio = np.convolve(filtre_coupe_bande_fenetre, data)
 plot_waveform(y=audio, title="Forme du fichier audio filtré")
 
+
+# Pour le rapport:
+plot_spectrum(data, fe, title="Spectre d'amplitude - Basson avant filtrage")
 create_wav_file(audio, fe, "basson_filtre.wav")
+
+
+# Signal avant filtrage (basson original)
+
+# Signal après filtrage
+plot_spectrum(audio, fe, title="Spectre d'amplitude - Basson après filtrage")
